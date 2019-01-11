@@ -1,0 +1,46 @@
+// セレクトしたカメラをbake処理したエクスポート用カメラを作成する。
+//　select cameraShape
+
+global proc _makeBakeCam(string $camSp[]){
+
+string $camTr[] = `listRelatives -parent $camSp[0]`;
+print $camTr[0];
+string $newCam = "camera";
+Duplicate $camTr[0] -n $newCam -rc -rr;
+parent -w -r $newCam;
+string $newCamSp[]=`listRelatives -s $newCam`;
+
+setAttr -l false ($newCam+".translateX");
+setAttr -l false ($newCam+".translateY");
+setAttr -l false ($newCam+".translateZ");
+setAttr -l false ($newCam+".rotateX");
+setAttr -l false ($newCam+".rotateY");
+setAttr -l false ($newCam+".rotateZ");
+
+string $pc[] = `pointConstraint -offset 0 0 0 -weight 1 $camTr[0] $newCam`;
+string $oc[] = `orientConstraint -offset 0 0 0 -weight 1 $camTr[0] $newCam`;
+
+setAttr -k on ($newCamSp[0]+".verticalShake");
+setAttr -k on ($newCamSp[0]+".horizontalShake");
+setAttr -k on ($newCamSp[0]+".verticalFilmAperture");
+setAttr -k on ($newCamSp[0]+".horizontalFilmAperture");
+
+setAttr -k on  ($newCam+".translateX");
+setAttr -k on  ($newCam+".translateY");
+setAttr -k on  ($newCam+".translateZ");
+setAttr -k on  ($newCam+".rotateX");
+setAttr -k on  ($newCam+".rotateY");
+setAttr -k on  ($newCam+".rotateZ");
+
+connectAttr ($camSp[0]+".verticalShake") ($newCamSp[0]+".verticalShake");
+connectAttr ($camSp[0]+".horizontalShake") ($newCamSp[0]+".horizontalShake");
+connectAttr ($camSp[0]+".verticalFilmAperture") ($newCamSp[0]+".verticalFilmAperture");
+connectAttr ($camSp[0]+".horizontalFilmAperture") ($newCamSp[0]+".horizontalFilmAperture");
+connectAttr ($camSp[0]+".focalLength") ($newCamSp[0]+".focalLength");
+
+//bake処理
+bakeResults -simulation true -t (`playbackOptions -q -min`+":"+`playbackOptions -q -max`) -hierarchy below -sampleBy 1 -oversamplingRate 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false -shape true {$newCam};
+delete $pc;
+delete $oc;
+}
+_SAMST_makeBakeCam(`ls -sl`);
